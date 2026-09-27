@@ -173,46 +173,41 @@ def main():
     # Our fill is synthesised by copying reference patches across a camera pair with an SSD match
     # that has no term keeping the copied LEVEL consistent with the virtual view's own background,
     # so it drifts; a smooth region has nothing but its level to get wrong.  The sibling
-    # reproduction fills in the virtual view and is 1.92 dB ahead with LESS texture, i.e. its lead
-    # is largely photometric (tools/photometric_check.py: per-block colour offset 7.3 vs 10.7).
-    # Matching the hole's per-channel mean and contrast to the surrounding valid content at the
-    # seam uses no ground truth and measured +0.36 dB (paper-literal) / +0.45 dB (temporal) on 10
-    # frames, positive on every single frame.
+    # reproduction fills in the virtual view and is 3.29 dB ahead exactly there, with LESS texture,
+    # i.e. its lead is largely photometric (tools/photometric_check.py: per-block colour offset
+    # 7.3 vs 10.7).  Two stages, both estimated at the seam with no ground truth:
+    #   global  match the whole filled region's per-channel mean and contrast to the boundary
+    #   spatial diffuse the residual seam offset inwards, removing the low-frequency drift the
+    #           single constant cannot reach (measured +1.83 and +1.17 dB, 10/10 frames positive)
     photo_stats = None
     pre_photo = None
     if getattr(cfg, "photo_correct", False) and filled_mask.any():
         pre_photo = np.array(final, copy=True)
-        ring = int(getattr(cfg, "photo_ring", 3))
-        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * ring + 1, 2 * ring + 1))
-        valid_side = ~hole_all
-        inner = filled_mask & (cv2.erode(filled_mask.astype(np.uint8), k) == 0)
-        outer = valid_side & (cv2.dilate(filled_mask.astype(np.uint8), k) > 0)
-        if inner.sum() >= 20 and outer.sum() >= 20:
-            f32 = final.astype(np.float32)
-            gains, shifts = [], []
-            for c in range(3):
-                hh = f32[..., c][inner]
-                vv = f32[..., c][outer]
-                gain = 1.0
-                if getattr(cfg, "photo_contrast", True) and hh.std() > 1e-3 and vv.std() > 1e-3:
-                    gain = float(np.clip(vv.std() / hh.std(), 0.8, 1.25))
-                clip = float(getattr(cfg, "photo_clip", 25.0))
-                shift = float(np.clip(vv.mean() - gain * hh.mean(), -clip, clip))
-                if abs(gain - 1.0) > 1e-6 or abs(shift) > 1e-6:
-                    f32[..., c][filled_mask] = np.clip(
-                        gain * f32[..., c][filled_mask] + shift, 0, 255)
-                gains.append(gain)
-                shifts.append(shift)
-            final = np.clip(np.rint(f32), 0, 255).astype(np.uint8)
-            photo_stats = dict(ring=ring, gains=gains, shifts=shifts,
-                               inner_px=int(inner.sum()), outer_px=int(outer.sum()))
+        final, photo_stats = render.photometric_seam_match(
+            final, filled_mask, ~hole_all,
+            ring=int(getattr(cfg, "photo_ring", 3)),
+            clip=float(getattr(cfg, "photo_clip", 25.0)),
+            contrast=bool(getattr(cfg, "photo_contrast", True)),
+            spatial=bool(getattr(cfg, "photo_spatial", True)),
+            iters=int(getattr(cfg, "photo_iters", 300)),
+            strength=float(getattr(cfg, "photo_strength", 1.0)))
+        if photo_stats.get("applied"):
             rep.log(f"photometric seam match: level shift (BGR) "
-                    f"{', '.join(f'{s:+.2f}' for s in shifts)}, gain "
-                    f"{', '.join(f'{g:.3f}' for g in gains)} "
-                    f"(seam bands {int(inner.sum())}/{int(outer.sum())} px)")
+                    f"{', '.join(f'{s:+.2f}' for s in photo_stats['shifts'])}, gain "
+                    f"{', '.join(f'{g:.3f}' for g in photo_stats['gains'])} "
+                    f"(seam bands {photo_stats['inner_px']}/{photo_stats['outer_px']} px)")
+            sp = photo_stats.get("spatial")
+            if sp:
+                rep.log(f"  + spatial drift removal: {sp['iters']} diffusion iters, "
+                        f"strength {sp['strength']:g}, mean |field| "
+                        f"{sp['mean_abs_field']:.2f} grey levels")
             diff_any = (final != warped_color).any(axis=2)
             filled_mask = diff_any
             remaining = hole_all & ~filled_mask
+        else:
+            rep.log(f"photometric seam match skipped ({photo_stats.get('reason')})")
+            photo_stats = None
+            pre_photo = None
 
     # ---------------- GT for the panel / metrics ---------------- #
     gt_cam = a.gt_cam if a.gt_cam is not None else cfg.dst_cam

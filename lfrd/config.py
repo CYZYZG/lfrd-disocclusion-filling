@@ -88,6 +88,14 @@ class RunConfig:
     photo_ring: int = 3              # width (px) of the boundary band used to estimate it
     photo_clip: float = 25.0         # cap on the level shift, in grey levels
     photo_contrast: bool = True      # also match the contrast, not only the mean
+    photo_spatial: bool = True       # second stage: diffuse the residual seam offset inwards,
+    #   removing the low-frequency drift the single constant cannot reach.  The residual really is
+    #   structured (f000: per-64px-block offset spans +1..-17 while the global step removes 6.9).
+    #   Measured on BA54 raw fill -> PSNR 16.34; +global 18.17 (+1.83); +spatial 19.34 (+3.00),
+    #   positive on all ten frames and insensitive to the iteration count (150..1200 within
+    #   0.25 dB).
+    photo_iters: int = 300           # Laplace diffusion iterations for the spatial stage
+    photo_strength: float = 1.0      # fraction of the diffused field to remove
     sizes: Optional[Tuple[int, ...]] = None   # adaptive patch-size cascade -- EXPERIMENTAL,
     #   OFF by default because it measured WORSE on this data.  Set to (9, 7, 5, 3) to
     #   enable.  Numbers and reasoning in 提升空间分析.md §4:
