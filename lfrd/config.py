@@ -57,6 +57,13 @@ class RunConfig:
     #   some frame; the other ~70% never do and are unchanged.
     temporal_q: float = 10.0         # temporal percentile used as the background depth
     temporal_tol: float = 4.0        # a frame counts as background when within this tolerance
+    temporal_agg: str = "mean"       # how the sampled frames are combined: "mean" (average),
+    #   "median", or "consensus" (median, then average only the samples within
+    #   temporal_agree_tol of it).  The frames a pixel samples differ from each other by ~8.4
+    #   colour units, so aggregation was the obvious suspect for the "over-textured" blocks.
+    #   Measured, it is NOT: on 5 frames (hole PSNR / SSIM) mean 22.668 / 0.6036,
+    #   median 22.667 / 0.6055, consensus 21.645 / 0.5302.  Mean stays the default.
+    temporal_agree_tol: float = 6.0  # agreement window for temporal_agg="consensus"
     sizes: Optional[Tuple[int, ...]] = None   # adaptive patch-size cascade -- EXPERIMENTAL,
     #   OFF by default because it measured WORSE on this data.  Set to (9, 7, 5, 3) to
     #   enable.  Numbers and reasoning in 提升空间分析.md §4:

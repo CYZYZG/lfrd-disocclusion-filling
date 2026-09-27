@@ -42,7 +42,7 @@ def temporal_depth_percentile(root, cam, frames, region, q=10.0):
 
 
 def build_temporal_background(root, cam, frames, region, q=10.0, tol=4.0,
-                              ref_level=None, min_samples=1):
+                              ref_level=None, min_samples=1, agg="mean", agree_tol=6.0):
     """Temporal background colour + depth for the pixels of `region`.
 
     Parameters
@@ -58,15 +58,27 @@ def build_temporal_background(root, cam, frames, region, q=10.0, tol=4.0,
         removal run; where the temporal estimate is FARTHER than it, the level is used instead
         (a pixel that never becomes background would otherwise keep its foreground depth)
     min_samples : minimum temporal evidence for a pixel to be part of the model
+    agg : how the sampled colours are combined.
+        ``"mean"``   : plain average (the original behaviour)
+        ``"median"`` : per-pixel median over the samples
+        ``"consensus"`` : median, then average only the samples within ``agree_tol`` of that
+            median.  The frames a pixel samples are not identical -- they differ by ~8.4 colour
+            units on BA54 because the background was partly occluded or moving in some of them
+            (tools/temporal_colour_check.py), and a plain average of inconsistent samples is
+            how the model produces invented colour at a geometrically correct position
+            (tools/shift_on_defects.py measured that shifting the defective blocks back only
+            recovers +0.47 dB, i.e. the defect is not a shift).  The consensus average keeps the
+            noise reduction of averaging while dropping the outlier frames.
+    agree_tol : agreement window for ``agg="consensus"``
 
     Returns
     -------
     dict(bg_color (H,W,3) uint8, bg_depth (H,W) uint8, n_samples (H,W) int32,
-         valid (H,W) bool, clipped (H,W) bool)
+         valid (H,W) bool, clipped (H,W) bool, n_used (H,W) int32)
     """
     ys, xs = np.nonzero(region)
-    n = len(list(frames))
     frames = list(frames)
+    n = len(frames)
     P = np.empty((n, ys.size), np.int16)
     COL = np.empty((n, ys.size, 3), np.uint8)
     for i, f in enumerate(frames):
@@ -85,18 +97,42 @@ def build_temporal_background(root, cam, frames, region, q=10.0, tol=4.0,
         clipped = over
     near = (P <= (z[None, :] + tol)) & (P > 0)
     n_s = near.sum(0)
+    n_used = n_s.astype(np.int32)
     col = np.zeros((ys.size, 3), np.float32)
-    for i in range(n):
-        sel = near[i]
-        if sel.any():
-            col[sel] += COL[i][sel].astype(np.float32)
     have = n_s > 0
-    col[have] /= n_s[have, None]
+    if agg == "mean":
+        acc = np.zeros((ys.size, 3), np.float32)
+        for i in range(n):
+            sel = near[i]
+            if sel.any():
+                acc[sel] += COL[i][sel].astype(np.float32)
+        col[have] = acc[have] / n_s[have, None]
+    else:
+        per = np.full((n, ys.size, 3), np.nan, np.float32)
+        for i in range(n):
+            sel = near[i]
+            if sel.any():
+                per[i][sel] = COL[i][sel].astype(np.float32)
+        with np.errstate(all="ignore"):
+            med = np.nanmedian(per, 0)
+        have = ~np.isnan(med[:, 0])
+        if agg == "median":
+            col[have] = med[have]
+        else:                                     # consensus
+            # keep only the samples that agree with the per-pixel median
+            win = np.abs(per - med[None, :, :]) <= agree_tol
+            win &= near[..., None]
+            cnt = win.sum(0).astype(np.float32)               # (N,3)
+            per2 = np.where(win, per, 0.0).sum(0)             # (N,3)
+            okk = cnt[:, 0] > 0
+            col[okk] = per2[okk] / cnt[okk][:, :1]
+            n_used = cnt[:, 0].astype(np.int32)
 
     H, W = region.shape
     bg_c = np.zeros((H, W, 3), np.uint8)
     bg_d = np.zeros((H, W), np.uint8)
     ns = np.zeros((H, W), np.int32)
+    nu = np.zeros((H, W), np.int32)
     valid = np.zeros((H, W), bool)
     clipped_full = np.zeros((H, W), bool)
     sel_ok = have & (n_s >= int(min_samples))
@@ -104,9 +140,10 @@ def build_temporal_background(root, cam, frames, region, q=10.0, tol=4.0,
     bg_c[sl] = np.clip(np.rint(col[sel_ok]), 0, 255).astype(np.uint8)
     bg_d[sl] = np.clip(np.rint(z[sel_ok]), 0, 255).astype(np.uint8)
     ns[ys, xs] = n_s
+    nu[ys, xs] = n_used
     valid[sl] = True
     clipped_full[ys, xs] = clipped
-    return dict(bg_color=bg_c, bg_depth=bg_d, n_samples=ns, valid=valid,
+    return dict(bg_color=bg_c, bg_depth=bg_d, n_samples=ns, n_used=nu, valid=valid,
                 clipped=clipped_full)
 
 

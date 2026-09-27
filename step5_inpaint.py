@@ -339,7 +339,9 @@ def main():
             cfg.dataset_root, cfg.src_cam, tframes, rem_mask,
             q=float(getattr(cfg, "temporal_q", 10.0)),
             tol=float(getattr(cfg, "temporal_tol", 4.0)),
-            ref_level=ref_lvl)
+            ref_level=ref_lvl,
+            agg=str(getattr(cfg, "temporal_agg", "mean")),
+            agree_tol=float(getattr(cfg, "temporal_agree_tol", 6.0)))
         filled, filled_depth, sel = _temporal.apply_to_occlusion_layer(
             filled, filled_depth, model, rem_mask)
         n_sel = int(sel.sum())
@@ -353,7 +355,8 @@ def main():
                 f"({100 * temporal_stats['substituted_frac']:.1f}% of the removed region), "
                 f"median temporal samples {temporal_stats['median_samples']:.0f}, "
                 f"{100 * temporal_stats['clipped_frac']:.1f}% of removed px never become "
-                f"background and keep the single-view prediction")
+                f"background and keep the single-view prediction; colour aggregation "
+                f"{getattr(cfg, 'temporal_agg', 'mean')}")
 
     # ---------------- background-continuation reference (metric for the ablations) ---- #
     valid_bg = (~rem_mask) & (~fg_region) & (removed_depth > 0)
