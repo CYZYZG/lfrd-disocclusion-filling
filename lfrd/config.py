@@ -46,6 +46,17 @@ class RunConfig:
 
     # ---- 5. removed-region filling (paper III-D) ------------------------- #
     patch_size: int = 9              # paper IV-A
+    temporal_frames: int = 0         # 0 = off; N = use frames 0..N-1 as temporal background
+    #   Paper IV/V future work.  With a static camera the occluded background a disocclusion
+    #   exposes is usually visible in OTHER frames: the temporal percentile of the inverse
+    #   depth is a background estimate and the frames reaching it carry the true colour.  Where
+    #   a pixel has such evidence the invented occlusion-layer content is replaced by the real
+    #   thing; pixels that never become background keep the single-view prediction.
+    #   Measured on BA54 (frames 0-2, 100 frames): the occlusion layer scores 20.84 -> 22.74 dB
+    #   (+1.90) and covers 39723 -> 41120 px.  ~30% of the removed pixels become background at
+    #   some frame; the other ~70% never do and are unchanged.
+    temporal_q: float = 10.0         # temporal percentile used as the background depth
+    temporal_tol: float = 4.0        # a frame counts as background when within this tolerance
     sizes: Optional[Tuple[int, ...]] = None   # adaptive patch-size cascade -- EXPERIMENTAL,
     #   OFF by default because it measured WORSE on this data.  Set to (9, 7, 5, 3) to
     #   enable.  Numbers and reasoning in 提升空间分析.md §4:

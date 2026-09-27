@@ -317,6 +317,44 @@ def main():
     filled = res["filled"]
     filled_depth = res["filled_depth"]
 
+    # ---------------- optional TEMPORAL background substitution ------------------- #
+    # paper IV/V future work: with a static camera the occluded background that the
+    # disocclusion exposes is usually visible in OTHER frames of the sequence.  Where that is
+    # the case we replace the invented content with the real thing; pixels with no temporal
+    # evidence keep the single-view prediction, so the two are complementary.
+    temporal_stats = None
+    if getattr(cfg, "temporal_frames", 0):
+        from lfrd import temporal as _temporal
+        tframes = list(range(int(cfg.temporal_frames)))
+        # per-pixel reference level for the temporal clip: stage 4 stores the measured
+        # background level map in removal_meta.npz; without it the temporal percentile is
+        # clipped by nothing and pixels that never become background keep a foreground value.
+        ref_lvl = None
+        try:
+            _meta = io_utils.load_npz(os.path.join(d_rem, "removal_meta.npz"))
+            ref_lvl = _meta.get("bg_level") if isinstance(_meta, dict) else None
+        except Exception:                                            # noqa: BLE001
+            ref_lvl = None
+        model = _temporal.build_temporal_background(
+            cfg.dataset_root, cfg.src_cam, tframes, rem_mask,
+            q=float(getattr(cfg, "temporal_q", 10.0)),
+            tol=float(getattr(cfg, "temporal_tol", 4.0)),
+            ref_level=ref_lvl)
+        filled, filled_depth, sel = _temporal.apply_to_occlusion_layer(
+            filled, filled_depth, model, rem_mask)
+        n_sel = int(sel.sum())
+        temporal_stats = dict(
+            n_frames=len(tframes), substituted_px=n_sel,
+            substituted_frac=float(n_sel / max(1, int(rem_mask.sum()))),
+            no_evidence_px=int(rem_mask.sum()) - n_sel,
+            median_samples=float(np.median(model["n_samples"][sel])) if n_sel else 0.0,
+            clipped_frac=float(model["clipped"][rem_mask].mean()))
+        rep.log(f"temporal background: {len(tframes)} frames, substituted {n_sel} px "
+                f"({100 * temporal_stats['substituted_frac']:.1f}% of the removed region), "
+                f"median temporal samples {temporal_stats['median_samples']:.0f}, "
+                f"{100 * temporal_stats['clipped_frac']:.1f}% of removed px never become "
+                f"background and keep the single-view prediction")
+
     # ---------------- background-continuation reference (metric for the ablations) ---- #
     valid_bg = (~rem_mask) & (~fg_region) & (removed_depth > 0)
     if valid_bg.sum() < 16:
