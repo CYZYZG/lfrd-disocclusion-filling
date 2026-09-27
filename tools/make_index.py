@@ -27,7 +27,11 @@ SECTIONS = [
         ("_compare/ba54_temporal_cam5-cam4-f000.png", "⑤ BA54 单帧：+时序背景",
          "同一帧、同一 warp，只换遮挡层来源"),
         ("_compare/q_30_cam3-cam0-f000.png", "⑥ 极端场景 cam3→cam0（27% 空洞）", ""),
-        ("_h2h/q_67_cam67_f000_panel.png", "⑦ 与参考项目的正面对决", "两边填同一份 warp"),
+        ("{best_temporal}/panels/panel_f008_temporal.png",
+         "⑦ 时序背景替换的效果（BA54 f008）",
+         "第 3、4 格是预测出的遮挡层：论文原样是外推的糊，时序版接回了真实窗帘纹理；"
+         "第 5、6 格是最终结果 21.65 → 22.82 dB"),
+        ("_h2h/q_67_cam67_f000_panel.png", "⑧ 与参考项目的正面对决", "两边填同一份 warp"),
     ]),
     ("逐阶段（每一步一图看懂）", [
         ("{best}/{fd}/10_preproc/panel_preproc.png", "① 深度预处理 + 鬼影修正",
@@ -64,6 +68,7 @@ FOLDERS = [
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--best", default="ba54_best")
+    ap.add_argument("--best_temporal", default="ba54_temporal")
     ap.add_argument("--frame", default="f000")
     ap.add_argument("--pair", default="cam5-cam4")
     a = ap.parse_args()
@@ -71,7 +76,9 @@ def main():
     fd = f"{a.pair}-{a.frame}"
 
     def rel(p):
-        return p.replace("{best}", a.best).replace("{fd}", fd)
+        return (p.replace("{best}", a.best)
+                 .replace("{best_temporal}", a.best_temporal)
+                 .replace("{fd}", fd))
 
     def exists(p):
         return os.path.isfile(os.path.join(io_utils.OUTPUT_ROOT, rel(p)))
