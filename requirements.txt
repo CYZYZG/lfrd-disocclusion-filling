@@ -1,0 +1,10 @@
+# Runtime dependencies.  This project is CLASSICAL ONLY: there is no deep-learning
+# framework, no model weights and nothing to download (verify with tools/verify_no_dl.py).
+numpy>=1.24
+opencv-python>=4.8
+scipy>=1.10
+Pillow>=9.5
+
+# Optional: only tools/photo_strength_check.py imports matplotlib, and it is guarded --
+# everything else runs without it.
+# matplotlib>=3.7
