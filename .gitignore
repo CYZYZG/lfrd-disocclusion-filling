@@ -1,0 +1,17 @@
+# ---- reproduction artefacts (regenerable, several GB) -------------------- #
+output/
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# ---- third-party / licence-restricted material --------------------------- #
+# The paper is IEEE copyright and the MSR 3D Video data is research-use only; neither is
+# redistributed here.  Point BALLET_DATA_ROOT at a local copy of the dataset instead.
+*.pdf
+paper_figs/
+paper_text.txt
+
+# ---- local scratch ------------------------------------------------------- #
+*.log
+.vscode/
+.idea/
