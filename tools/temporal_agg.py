@@ -30,7 +30,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 from lfrd import io_utils, metrics
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def aggregate(root, cam, frames, region, q=10.0, tol=4.0, ref_level=None, rule="mean",

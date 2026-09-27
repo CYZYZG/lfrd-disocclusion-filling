@@ -19,7 +19,7 @@ from lfrd.config import RunConfig
 
 PY = sys.executable
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = r"D:\项目\空洞填补2\output\_tpl"
+OUT = os.path.join(ROOT, "output", "_tpl")
 
 
 def run(cmd):

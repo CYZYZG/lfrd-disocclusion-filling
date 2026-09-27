@@ -5,7 +5,8 @@ import sys
 import cv2
 import numpy as np
 
-sys.path.insert(0, r"D:\项目\空洞填补2")
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding="utf-8")
 
 from lfrd import io_utils, metrics, viz

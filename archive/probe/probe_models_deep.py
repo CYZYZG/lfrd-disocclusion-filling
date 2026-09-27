@@ -39,7 +39,11 @@ print()
 print("=== 3. any model-ish file on C: and D: drives (deeper search) ===")
 pats = ["*.onnx", "*.caffemodel", "*.prototxt", "*.tflite", "*.pb", "*.weights", "*.h5"]
 hits = []
-for root in ("C:\\Users\\ZHJ", "D:\\项目", "C:\\Program Files", "C:\\ProgramData"):
+# adjust these roots for your machine: home, the folder holding your projects, and the system
+for root in (os.path.expanduser("~"),
+             os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+             os.environ.get("ProgramFiles", r"C:\Program Files"),
+             os.environ.get("ProgramData", r"C:\ProgramData")):
     if not os.path.isdir(root):
         continue
     for p in pats:

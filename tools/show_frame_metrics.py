@@ -3,11 +3,14 @@ import json
 import os
 import sys
 
-sys.path.insert(0, r"D:\项目\空洞填补2")
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
+from lfrd import workspace
+ROOT = workspace.project_root()
 sys.stdout.reconfigure(encoding="utf-8")
 
 d = sys.argv[1] if len(sys.argv) > 1 else \
-    r"D:\项目\空洞填补2\output\ba54_temporal__cam5-4-f008"
+    os.path.join(ROOT, "output", "ba54_temporal__cam5-4-f008")
 print("== " + os.path.basename(d))
 
 mp = os.path.join(d, "60_final", "metrics.json")

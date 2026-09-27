@@ -1,6 +1,6 @@
 """Compare the two reproductions under ONE metric formulation.
 
-D:\\项目\\空洞填补 uses `viz.psnr` = PSNR on **grayscale (luma)**, and reports
+The sibling project uses `viz.psnr` = PSNR on **grayscale (luma)**, and reports
 `gt_psnr_frame_after` = whole frame with the holes counted as black.  Our own runner uses
 **RGB** PSNR and reports a region-restricted value that averages the MSE over the region's
 own pixels.  Comparing the two numbers directly is meaningless; this script recomputes OUR

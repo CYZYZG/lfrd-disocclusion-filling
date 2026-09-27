@@ -2,7 +2,7 @@
 
 Plain asserts, no pytest:  run with the bundled interpreter
 
-    C:\\Users\\ZHJ\\.dsh\\dsh-runtimes\\dsh-primary-runtime\\dependencies\\python\\python.exe tests\\test_step1_2.py
+    python tests\\test_step1_2.py
 
 Covers
 

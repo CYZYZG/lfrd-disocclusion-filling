@@ -6,9 +6,9 @@ IEEE Access, vol. 8, pp. 201286–201299, 2020, DOI 10.1109/ACCESS.2020.3036053�
 **论文无开源代码**，本仓库是从零实现的完整复现，每一步都有可独立运行的脚本、断言和可视化面板。
 
 * 详细方案、逐步规格、参数出处、歧义处理记录 → **[复现方案.md](复现方案.md)**（先读这一份）
-* 参考的前向 warp / 标定实现 → 另一个复现项目 `D:\项目\空洞填补`
+* 参考的前向 warp / 标定实现 → 另一个复现项目（本仓库不含，见 `lfrd/workspace.py` 的 `SIBLING_ROOT`）
 
-数据：`D:\项目\3DVideos-distrib\MSR3DVideo-Ballet`（MSR 3D Video，8 相机 × 100 帧，
+数据：`$env:BALLET_DATA_ROOT`（MSR 3D Video，8 相机 × 100 帧，
 1024×768，彩色 jpg + 逆深度 png + 官方 `calibParams-ballet.txt`）。
 
 ---
@@ -37,11 +37,34 @@ IEEE Access, vol. 8, pp. 201286–201299, 2020, DOI 10.1109/ACCESS.2020.3036053�
 只需要 Python 3 + `numpy`、`opencv-python`、`scipy`（无 matplotlib，所有可视化用 cv2 自己画）。
 
 ```powershell
-$py = "C:\Users\ZHJ\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe"
+$py = "python"
 ```
 
 > ⚠️ 工作路径含中文：**一律用 `lfrd.io_utils.imread/imwrite`**（内部 `np.fromfile` +
 > `cv2.imdecode`），不要直接 `cv2.imread`。
+
+### 2.1 数据与路径配置（克隆后需要）
+
+本仓库**不包含数据集**（MSR 3D Video Ballet 仅限研究使用），也不含论文 PDF——见 `.gitignore`。
+所有路径从环境变量解析，克隆后**不需要改任何文件**：
+
+| 环境变量 | 用途 | 未设置时的回退 |
+| --- | --- | --- |
+| `BALLET_DATA_ROOT` | MSR Ballet 数据集根目录（含 `cam0..cam7` 与 `calibParams-ballet.txt`） | `<project>/data/MSR3DVideo-Ballet`，或项目旁的 `3DVideos-distrib/MSR3DVideo-Ballet` |
+| `SIBLING_ROOT` | 对比用的参考项目（**仅**正面对决类工具需要） | `<project>/data/sibling` |
+| `LFRD_PYTHON` | 工具 shell out 时用的解释器 | `sys.executable` |
+
+```powershell
+$env:BALLET_DATA_ROOT = "D:\data\MSR3DVideo-Ballet"
+```
+
+不确定解析到哪了：
+
+```powershell
+& $py -c "from lfrd import workspace; print(workspace.env_report())"
+```
+
+实现见 `lfrd/workspace.py`；接口用法见 [接口使用说明.md](接口使用说明.md)。
 
 ## 3. 用法
 
@@ -242,7 +265,7 @@ output/<run>/            产物
 单帧端到端耗时约 32 s（1024×768，单线程）；其中 inpainting 约 2 s，时序背景模型约 8 s。
 
 > ⚠️ **"整帧 PSNR"这一行不能拿去和别的实现直接比**：这里把**未填的黑色 OOFA**
-> 也算进整帧（与论文 Fig.12/13 一致），而参考项目 `D:\项目\空洞填补` 会**把 OOFA 也填掉**
+> 也算进整帧（与论文 Fig.12/13 一致），而参考项目（sibling）会**把 OOFA 也填掉**
 > 且用**灰度 luma**。口径不同，差值可达 6~11 dB。
 > **统一口径后的对比、以及"把我们的 warp 喂给它的填充器"的正面对决结论见
 > [对比分析_与参考项目.md](对比分析_与参考项目.md)**：

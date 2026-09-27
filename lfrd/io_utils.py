@@ -5,8 +5,14 @@ import os
 import cv2
 import numpy as np
 
-DATASET_ROOT_DEFAULT = os.environ.get(
-    "BALLET_DATA_ROOT", r"D:\项目\3DVideos-distrib\MSR3DVideo-Ballet")
+from .workspace import default_dataset_root
+
+# The MSR 3D Video Ballet dataset is research-use only and is NOT redistributed with this
+# repository, so its location is resolved from the environment (BALLET_DATA_ROOT) with several
+# conventional fallbacks -- see lfrd/workspace.py.  Call
+# `lfrd.workspace.dataset_root(required=True)` when you want a clear error instead of a
+# missing-file one.
+DATASET_ROOT_DEFAULT = default_dataset_root()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_ROOT = os.path.join(PROJECT_ROOT, "output")

@@ -16,8 +16,8 @@ from lfrd import io_utils, metrics
 from lfrd.config import RunConfig
 
 PY = sys.executable
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SEARCH_ROOT = r"D:\项目\空洞填补2\output\_planA"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SEARCH_ROOT = os.path.join(ROOT, "output", "_planA")
 
 
 def run(cmd):

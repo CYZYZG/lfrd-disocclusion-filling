@@ -1,6 +1,6 @@
 """Head-to-head: run the sibling project's filler on OUR warp, compare like-for-like.
 
-The sibling project (`D:\\项目\\空洞填补`, viewfill) fills an already-warped view.  Feeding it
+The sibling project (`viewfill`; set SIBLING_ROOT to its checkout) fills an already-warped view.  Feeding it
 exactly the warp OUR pipeline produced (same colour, same depth, same hole mask) removes every
 confound except the filling algorithm itself, and the two results can then be scored on ONE
 mask with ONE metric:
@@ -27,7 +27,11 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 from lfrd import io_utils
 
-SIBLING = r"D:\项目\空洞填补"
+SIBLING = os.environ.get("SIBLING_ROOT")
+if not SIBLING:
+    raise SystemExit(
+        "set SIBLING_ROOT to the sibling DIBR reproduction, or pass --sibling")
+SIBLING = str(SIBLING)
 PY = sys.executable
 
 

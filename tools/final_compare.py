@@ -1,10 +1,14 @@
 """Compare the three shipped configurations over the 10-frame BA54 sequence."""
 import json
+import os
 import sys
 
 import numpy as np
 
-sys.path.insert(0, r"D:\项目\空洞填补2")
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
+from lfrd import workspace
+ROOT = workspace.project_root()
 sys.stdout.reconfigure(encoding="utf-8")
 
 CFG = [("paper-literal", "base10"),
@@ -15,7 +19,8 @@ CFG = [("paper-literal", "base10"),
 print("%-26s %9s %9s %9s %9s %9s" % ("config", "whole PSNR", "whole SSIM",
                                      "filled PSNR", "filled SSIM", "valid PSNR"))
 for name, run in CFG:
-    with open(rf"D:\项目\空洞填补2\output\{run}\eval\metrics.json", encoding="utf-8") as fh:
+    with open(os.path.join(ROOT, "output", run, "eval", "metrics.json"),
+              encoding="utf-8") as fh:
         d = json.load(fh)
     g = [r for r in d if "ours_psnr" in r]
     m = lambda k: float(np.mean([r[k] for r in g]))

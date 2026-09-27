@@ -1,7 +1,12 @@
-"""Probe: (1) OOFA side, (2) ghost-contamination sign for the morphology preprocessing."""
+"""Probe: (1) OOFA side, (2) ghost-contamination sign for the morphology preprocessing.
+
+Needs the sibling DIBR reproduction on sys.path: set SIBLING_ROOT to its directory.
+"""
 import sys, os
 import numpy as np
-sys.path.insert(0, r'D:\项目\空洞填补')
+sys.path.insert(0, os.environ.get("SIBLING_ROOT") or
+                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "data", "sibling"))
 sys.stdout.reconfigure(encoding='utf-8')
 from dibr import io_utils, calib, warp as W
 

@@ -1,7 +1,7 @@
 """Camera calibration, MSR inverse-depth model, projection and displacement fields.
 
 Everything here mirrors the conventions of the MSR 3D Video distribution and of the
-sibling reproduction project (D:\\项目\\空洞填补\\dibr\\calib.py), which this paper shares:
+sibling reproduction project (dibr/calib.py there), which this paper shares:
 
   * depth PNG stores INVERSE depth:  z = 1 / ((P/255)*(1/MinZ - 1/MaxZ) + 1/MaxZ)
     MinZ = 42.0, MaxZ = 130.0  (same length unit as the calibration translations)

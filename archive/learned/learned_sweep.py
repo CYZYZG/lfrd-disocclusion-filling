@@ -25,7 +25,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 from lfrd import io_utils, learned, metrics, temporal
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def compose(base_src, run, src, dst, frame, c, d, pred_d):

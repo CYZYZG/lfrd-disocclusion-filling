@@ -22,8 +22,9 @@ print("cv2.inpaint      :", hasattr(cv2, "inpaint"))
 print("cv2.xphoto       :", hasattr(cv2, "xphoto"))
 print()
 
-# look for any model weights already on disk
-ROOTS = [r"C:\Users\ZHJ\.dsh", r"D:\项目", os.path.dirname(os.__file__)]
+# look for any model weights already on disk (adjust these roots for your machine)
+ROOTS = [os.path.expanduser("~"), os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))), os.path.dirname(os.__file__)]
 EXT = (".pth", ".pt", ".onnx", ".caffemodel", ".pb", ".tflite", ".h5", ".weights")
 found = []
 for r in ROOTS:

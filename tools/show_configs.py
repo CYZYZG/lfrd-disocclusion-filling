@@ -3,7 +3,10 @@ import json
 import os
 import sys
 
-sys.path.insert(0, r"D:\项目\空洞填补2")
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
+from lfrd import workspace
+ROOT = workspace.project_root()
 sys.stdout.reconfigure(encoding="utf-8")
 
 from lfrd.config import RunConfig
@@ -18,7 +21,7 @@ print()
 print("%-16s %-14s %-10s %-10s %-10s" % ("run", "temporal", "fill_oofa", "sizes",
                                          "struct_pen"))
 for r in ("ba54_seq", "ba54_temporal", "ba54_oofa", "ba54_best"):
-    p = rf"D:\项目\空洞填补2\output\{r}\config.json"
+    p = os.path.join(ROOT, "output", r, "config.json")
     if os.path.isfile(p):
         with open(p, encoding="utf-8") as fh:
             j = json.load(fh)

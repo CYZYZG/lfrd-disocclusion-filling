@@ -17,7 +17,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 from lfrd import io_utils, learned, metrics
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRATCH = os.path.join(ROOT, "output", "_learned")
 
 

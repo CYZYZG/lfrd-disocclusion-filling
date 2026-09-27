@@ -23,7 +23,7 @@ from lfrd import io_utils, metrics
 from lfrd.config import RunConfig
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def luma(img):

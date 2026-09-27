@@ -26,7 +26,11 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 from lfrd import io_utils
 
-SIBLING = r"D:\项目\空洞填补"
+SIBLING = os.environ.get("SIBLING_ROOT")
+if not SIBLING:
+    raise SystemExit(
+        "set SIBLING_ROOT to the sibling DIBR reproduction, or pass --sibling")
+SIBLING = str(SIBLING)
 PY = sys.executable
 
 

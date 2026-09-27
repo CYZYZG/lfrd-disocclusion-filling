@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 from lfrd import io_utils, metrics
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def sibling_cracks(depth_warped, hole, length=4, lam=5):

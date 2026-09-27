@@ -21,7 +21,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 from lfrd import io_utils, metrics, refguide, temporal
 
 PY = sys.executable
-ROOT = r"D:\项目\空洞填补2"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def prepare_run(base_src, run, src, dst, frame, layer_c, layer_d, pred_d):

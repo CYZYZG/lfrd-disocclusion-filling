@@ -23,11 +23,12 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.stdout.reconfigure(encoding="utf-8")
 
 from lfrd import calib, inpaint as I, io_utils, metrics, warp as W
 
-CACHE = r"D:\项目\空洞填补2\output\_temporal"
+CACHE = os.path.join(ROOT, "output", "_temporal")
 
 
 def _load_stack(root, cam, frames, kind):

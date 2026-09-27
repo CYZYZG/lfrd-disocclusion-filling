@@ -57,13 +57,16 @@
 它们依赖 `lfrd` 包，运行时需要把项目根目录放进 `sys.path`：
 
 ```python
+import os
 import sys
-sys.path.insert(0, r"D:\项目\空洞填补2")
+
+PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 项目根目录
+sys.path.insert(0, PROJECT)
 
 # 例如归档的字典学习实现（原 lfrd/learned.py，现在文件名不同）：
 import importlib.util
 spec = importlib.util.spec_from_file_location(
-    "learned", r"D:\项目\空洞填补2\archive\learned\lfrd_learned.py")
+    "learned", os.path.join(PROJECT, "archive", "learned", "lfrd_learned.py"))
 learned = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(learned)
 ```
@@ -75,7 +78,7 @@ spec.loader.exec_module(learned)
 ## 这个分类是怎么来的
 
 ```powershell
-$py = "C:\Users\ZHJ\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe"
+$py = "python"
 & $py tools\inventory.py --csv output\_inventory.csv
 ```
 
