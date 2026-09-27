@@ -357,6 +357,40 @@ def main():
                 f"{100 * temporal_stats['clipped_frac']:.1f}% of removed px never become "
                 f"background and keep the single-view prediction; colour aggregation "
                 f"{getattr(cfg, 'temporal_agg', 'mean')}")
+        gap_mask = rem_mask & ~sel        # where the temporal model had no evidence
+    else:
+        gap_mask = rem_mask
+        sel = np.zeros(rem_mask.shape, bool)
+
+    # ---------------- optional REFERENCE-GUIDED fill ------------------------------ #
+    # Search the reference image for the background the removed band will reveal instead of
+    # inventing it (lfrd/refguide.py).  With the temporal model on, only the pixels it could not
+    # answer are touched, because overwriting real temporal content was measured to cost
+    # 0.67 dB.
+    refguide_stats = None
+    if getattr(cfg, "refguide", False) and gap_mask.any():
+        from lfrd import refguide as _refguide
+        rg = _refguide.reference_guided_fill(
+            filled, filled_depth, ref["color"], depth_pred, gap_mask,
+            cams, cfg.src_cam, cfg.dst_cam,
+            search=int(getattr(cfg, "refguide_search", 0)),
+            patch=int(cfg.patch_size),
+            max_cost=float(getattr(cfg, "refguide_cost", 48.0)),
+            depth_slack=float(getattr(cfg, "refguide_slack", 8.0)))
+        accepted = rg["offset"].any(2) & gap_mask
+        filled[accepted] = rg["color"][accepted]
+        filled_depth[accepted] = rg["depth"][accepted]
+        refguide_stats = dict(replaced_px=int(accepted.sum()),
+                              candidate_px=int(gap_mask.sum()),
+                              accepted_frac=float(accepted.sum() / max(1, int(gap_mask.sum()))),
+                              mean_cost=rg["mean_cost"],
+                              search=int(getattr(cfg, "refguide_search", 0)),
+                              depth_slack=float(getattr(cfg, "refguide_slack", 8.0)))
+        rep.log(f"reference-guided fill: replaced {refguide_stats['replaced_px']} px of the "
+                f"{refguide_stats['candidate_px']} px the temporal model could not answer "
+                f"({100 * refguide_stats['accepted_frac']:.1f}%), mean match cost "
+                f"{refguide_stats['mean_cost']:.1f} (search={refguide_stats['search']}, "
+                f"depth_slack={refguide_stats['depth_slack']:g})")
 
     # ---------------- background-continuation reference (metric for the ablations) ---- #
     valid_bg = (~rem_mask) & (~fg_region) & (removed_depth > 0)

@@ -64,6 +64,18 @@ class RunConfig:
     #   Measured, it is NOT: on 5 frames (hole PSNR / SSIM) mean 22.668 / 0.6036,
     #   median 22.667 / 0.6055, consensus 21.645 / 0.5302.  Mean stays the default.
     temporal_agree_tol: float = 6.0  # agreement window for temporal_agg="consensus"
+    refguide: bool = False           # reference-guided occlusion-layer prediction: search the
+    #   REFERENCE IMAGE for the background the removed band will reveal, instead of inventing it
+    #   (lfrd/refguide.py).  Off by default because it is only additive WITHOUT the temporal
+    #   model -- with temporal on it overlaps and costs 0.67 dB.  Measured on BA54 frames 0-4
+    #   through the real stage 6: paper-literal 21.00 -> 21.68 dB (+0.68) with refguide on;
+    #   temporal 22.67 -> 22.46 (-0.21) restricted to the temporal gap and 22.00 (-0.67) applied
+    #   everywhere.  Use it when no multi-frame sequence is available.
+    refguide_search: int = 0         # displacement search half-window; 0 (the back-projected
+    #   position only) measured best, and enlarging it made things worse, which confirms the
+    #   geometry is right and only the CONTENT was missing
+    refguide_slack: float = 8.0      # depth-consistency tolerance (8-bit inverse depth)
+    refguide_cost: float = 48.0      # mean SSD/channel above which the match is rejected
     sizes: Optional[Tuple[int, ...]] = None   # adaptive patch-size cascade -- EXPERIMENTAL,
     #   OFF by default because it measured WORSE on this data.  Set to (9, 7, 5, 3) to
     #   enable.  Numbers and reasoning in 提升空间分析.md §4:

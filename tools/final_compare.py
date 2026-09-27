@@ -7,9 +7,11 @@ import numpy as np
 sys.path.insert(0, r"D:\项目\空洞填补2")
 sys.stdout.reconfigure(encoding="utf-8")
 
-CFG = [("paper-literal (OOFA black)", "ba54_seq"),
-       ("+ temporal background", "ba54_temporal"),
-       ("+ temporal + OOFA filled", "ba54_best")]
+CFG = [("paper-literal", "base10"),
+       ("+ reference-guided", "rg_only"),
+       ("+ temporal", "ba54_temporal"),
+       ("+ temporal + refguide", "tem_rg"),
+       ("+ temporal + OOFA", "ba54_best")]
 print("%-26s %9s %9s %9s %9s %9s" % ("config", "whole PSNR", "whole SSIM",
                                      "filled PSNR", "filled SSIM", "valid PSNR"))
 for name, run in CFG:
