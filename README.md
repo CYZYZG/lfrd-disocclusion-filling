@@ -45,6 +45,25 @@ $py = "C:\Users\ZHJ\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\py
 
 ## 3. 用法
 
+### 3.0 直接调用接口（推荐）
+
+一句话完成空洞填补，不需要逐个跑阶段：
+
+```python
+from lfrd.api import fill_holes
+
+res = fill_holes("my_run", src_cam=5, dst_cam=4, frame="f000",
+                 temporal_frames=100,   # 时序背景建模（+1.68 dB）
+                 fill_oofa=True)        # 同时填视野外区域（整帧 +9.5 dB）
+res.save("filled.png")
+print(res.summary())                    # 洞区 23.94 dB / 整帧 29.79 dB（f000）
+```
+
+- 完整文档：**[接口使用说明.md](接口使用说明.md)**（签名、两种输入方式、深度与标定格式、
+  返回值、参数选择、常见问题、性能）
+- 可运行示例：`python examples_fill_holes.py`（6 个场景，实测全部通过）
+- 也可以用自己的图片：`ref_image=... , ref_depth=... , calib_file=...`
+
 ### 3.1 一步跑完整流程 + 评价
 
 ```powershell
