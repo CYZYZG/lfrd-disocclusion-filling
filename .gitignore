@@ -15,3 +15,7 @@ paper_text.txt
 *.log
 .vscode/
 .idea/
+
+# ---- generated inventories ----------------------------------------------- #
+# tools/inventory.py writes a CSV classification of every file here; regenerable, so not tracked.
+output/_inventory.csv

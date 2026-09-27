@@ -45,6 +45,23 @@ $py = "C:\Users\ZHJ\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\py
 
 ## 3. 用法
 
+### 3.-1 项目文件导航
+
+| 位置 | 内容 |
+| --- | --- |
+| `lfrd/` | **核心库**：`api.py`（调用接口）· 六个阶段的模块 · `config.py` · `calib.py` · `metrics.py` |
+| `step1..6_*.py` | 六个阶段的命令行入口（接口内部就是串它们） |
+| `run_all.py` / `check_all.py` | 批量跑全部相机对 / 跑全部断言 |
+| `tests/` | 三个测试文件（145 项断言） |
+| `tools/` | **诊断与测量工具**（约 70 个），每个对应文档里的一个实测结论 |
+| `archive/` | **归档的冗余代码，未删除**：字典学习路线、早期参数扫描、一次性环境侦察。见 [archive/README.md](archive/README.md) |
+| `output/` | 全部运行产物（已 gitignore）。看图看 `output/index.html`，先读 [结果查看指南.md](结果查看指南.md) |
+| `examples_fill_holes.py` | 接口的 6 个可运行示例 |
+| 文档 | [接口使用说明.md](接口使用说明.md) · [复现方案.md](复现方案.md) · [提升空间分析.md](提升空间分析.md) · [传统方法边界.md](传统方法边界.md) · [纹理区分析与参考项目优势溯源.md](纹理区分析与参考项目优势溯源.md) · [对比分析_与参考项目.md](对比分析_与参考项目.md) |
+
+整理依据：`python tools/inventory.py --csv output/_inventory.csv`（把每个文件归类为
+KEEP / ARCHIVE / REVIEW 并给出理由）。
+
 ### 3.0 直接调用接口（推荐）
 
 一句话完成空洞填补，不需要逐个跑阶段：
