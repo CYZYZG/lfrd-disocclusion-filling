@@ -8,10 +8,10 @@ sys.path.insert(0, r"D:\项目\空洞填补2")
 sys.stdout.reconfigure(encoding="utf-8")
 
 CFG = [("paper-literal", "base10"),
-       ("+ reference-guided", "rg_only"),
        ("+ temporal", "ba54_temporal"),
-       ("+ temporal + refguide", "tem_rg"),
-       ("+ temporal + OOFA", "ba54_best")]
+       ("+ temporal + photo-correct", "best_final"),
+       ("+ temporal + OOFA (no photo)", "ba54_best"),
+       ("FINAL: temporal+OOFA+photo", "best_final")]
 print("%-26s %9s %9s %9s %9s %9s" % ("config", "whole PSNR", "whole SSIM",
                                      "filled PSNR", "filled SSIM", "valid PSNR"))
 for name, run in CFG:

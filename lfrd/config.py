@@ -76,6 +76,18 @@ class RunConfig:
     #   geometry is right and only the CONTENT was missing
     refguide_slack: float = 8.0      # depth-consistency tolerance (8-bit inverse depth)
     refguide_cost: float = 48.0      # mean SSD/channel above which the match is rejected
+    photo_correct: bool = True       # photometric seam match of the filled region, at the very
+    #   end of stage 6.  tools/photometric_check.py found the sibling reproduction's per-block
+    #   colour offset from the ground truth is far smaller than ours (7.28 vs 10.73 on smooth
+    #   background, 7.12 vs 10.84 on textured) while its texture retention is LOWER -- so a large
+    #   part of its lead is photometric, not content or geometry: our invented fill sits at a
+    #   slightly wrong level, and a smooth region has nothing but its level to get wrong.  The
+    #   correction matches the hole's per-channel mean and contrast to the surrounding VALID
+    #   content at the seam (no ground truth involved).  Measured on BA54, 10 frames, all
+    #   positive: paper-literal 21.18 -> 21.54 (+0.36), temporal 22.86 -> 23.31 (+0.45).
+    photo_ring: int = 3              # width (px) of the boundary band used to estimate it
+    photo_clip: float = 25.0         # cap on the level shift, in grey levels
+    photo_contrast: bool = True      # also match the contrast, not only the mean
     sizes: Optional[Tuple[int, ...]] = None   # adaptive patch-size cascade -- EXPERIMENTAL,
     #   OFF by default because it measured WORSE on this data.  Set to (9, 7, 5, 3) to
     #   enable.  Numbers and reasoning in 提升空间分析.md §4:

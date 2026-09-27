@@ -169,6 +169,51 @@ def main():
     filled_mask = diff_any
     remaining = hole_all & ~filled_mask
 
+    # ---------------- photometric seam match ------------------------------------- #
+    # Our fill is synthesised by copying reference patches across a camera pair with an SSD match
+    # that has no term keeping the copied LEVEL consistent with the virtual view's own background,
+    # so it drifts; a smooth region has nothing but its level to get wrong.  The sibling
+    # reproduction fills in the virtual view and is 1.92 dB ahead with LESS texture, i.e. its lead
+    # is largely photometric (tools/photometric_check.py: per-block colour offset 7.3 vs 10.7).
+    # Matching the hole's per-channel mean and contrast to the surrounding valid content at the
+    # seam uses no ground truth and measured +0.36 dB (paper-literal) / +0.45 dB (temporal) on 10
+    # frames, positive on every single frame.
+    photo_stats = None
+    pre_photo = None
+    if getattr(cfg, "photo_correct", False) and filled_mask.any():
+        pre_photo = np.array(final, copy=True)
+        ring = int(getattr(cfg, "photo_ring", 3))
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * ring + 1, 2 * ring + 1))
+        valid_side = ~hole_all
+        inner = filled_mask & (cv2.erode(filled_mask.astype(np.uint8), k) == 0)
+        outer = valid_side & (cv2.dilate(filled_mask.astype(np.uint8), k) > 0)
+        if inner.sum() >= 20 and outer.sum() >= 20:
+            f32 = final.astype(np.float32)
+            gains, shifts = [], []
+            for c in range(3):
+                hh = f32[..., c][inner]
+                vv = f32[..., c][outer]
+                gain = 1.0
+                if getattr(cfg, "photo_contrast", True) and hh.std() > 1e-3 and vv.std() > 1e-3:
+                    gain = float(np.clip(vv.std() / hh.std(), 0.8, 1.25))
+                clip = float(getattr(cfg, "photo_clip", 25.0))
+                shift = float(np.clip(vv.mean() - gain * hh.mean(), -clip, clip))
+                if abs(gain - 1.0) > 1e-6 or abs(shift) > 1e-6:
+                    f32[..., c][filled_mask] = np.clip(
+                        gain * f32[..., c][filled_mask] + shift, 0, 255)
+                gains.append(gain)
+                shifts.append(shift)
+            final = np.clip(np.rint(f32), 0, 255).astype(np.uint8)
+            photo_stats = dict(ring=ring, gains=gains, shifts=shifts,
+                               inner_px=int(inner.sum()), outer_px=int(outer.sum()))
+            rep.log(f"photometric seam match: level shift (BGR) "
+                    f"{', '.join(f'{s:+.2f}' for s in shifts)}, gain "
+                    f"{', '.join(f'{g:.3f}' for g in gains)} "
+                    f"(seam bands {int(inner.sum())}/{int(outer.sum())} px)")
+            diff_any = (final != warped_color).any(axis=2)
+            filled_mask = diff_any
+            remaining = hole_all & ~filled_mask
+
     # ---------------- GT for the panel / metrics ---------------- #
     gt_cam = a.gt_cam if a.gt_cam is not None else cfg.dst_cam
     gt = None
@@ -237,9 +282,15 @@ def main():
                   bool(np.array_equal(final[hole_oofa], warped_color[hole_oofa]))
                   if hole_oofa.any() else True,
                   f"{int(hole_oofa.sum())} OOFA px")
+    # The III-E step-2 contract is asserted on the image BEFORE the photometric seam match: the
+    # match deliberately re-levels every filled pixel, so comparing the corrected result against
+    # the raw warped occlusion layer would fail by construction.  `pre_photo` is that image when
+    # the correction ran, otherwise it is None and the check reads `final` directly.
+    _contract_img = final if pre_photo is None else pre_photo
     rep.check("pixels filled in III-E step 2 came from the predicted occlusion layer",
-              bool(np.array_equal(final[filled_occ], st["occ_color"][filled_occ])),
-              f"{int(filled_occ.sum())} px compared with the warped occlusion layer")
+              bool(np.array_equal(_contract_img[filled_occ], st["occ_color"][filled_occ])),
+              f"{int(filled_occ.sum())} px compared with the warped occlusion layer"
+              + ("" if pre_photo is None else " (before the photometric seam match)"))
     rep.check("no valid pixel was overwritten by the occlusion layer",
               st["overwritten"] == 0, f"overwritten = {st['overwritten']}")
     if gt is not None:
