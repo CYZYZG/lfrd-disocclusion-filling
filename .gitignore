@@ -31,6 +31,10 @@ data/
 *.log
 .vscode/
 .idea/
+commit_msg.txt
+commitmsg.txt
+commitmsg.tmp
+.git-commit-msg.tmp
 
 # ---- generated inventories ----------------------------------------------- #
 # tools/inventory.py writes a CSV classification of every file here; regenerable, so not tracked.
